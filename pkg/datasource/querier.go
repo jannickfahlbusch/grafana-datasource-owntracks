@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"time"
+	"unsafe"
 
 	"github.com/jannickfahlbusch/owntracks-go/types"
 
@@ -47,6 +48,11 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 	from := query.TimeRange.From
 	to := query.TimeRange.To
 
+	labels := data.Labels{
+		"User":   request.User,
+		"Device": request.Device,
+	}
+
 	var locations *types.LocationList
 	locations, response.Error = client.Locations(ctx, request.User, request.Device, from, to)
 	if response.Error != nil {
@@ -55,25 +61,33 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 
 	log.DefaultLogger.Info("Got locations response", "amountLocations", locations.Count)
 
-	var tableFrame *data.Frame
-
+	// Table Frame
+	/*var tableFrame *data.Frame
 	tableFrame, response.Error = toTable(locations)
 	if response.Error != nil {
 		return response
 	}
 
-	response.Frames = append(response.Frames, tableFrame)
+	response.Frames = append(response.Frames, tableFrame)*/
+
+	// Time Series Frame
+	var timeSeriesFrame *data.Frame
+	timeSeriesFrame, response.Error = toTimeSeries(locations, labels)
+	response.Frames = append(response.Frames, timeSeriesFrame)
+
+	log.DefaultLogger.Info("Returning frames", "length", len(response.Frames), "size", unsafe.Sizeof(response))
 
 	return response
 }
 
-func toTimeSeries(locations *types.LocationList) (*data.Frame, error) {
+func toTimeSeries(locations *types.LocationList, labels Labels) (*data.Frame, error) {
 	frame := data.NewFrame("location",
-		data.NewField("time", nil, make([]time.Time, locations.Count)),
-		data.NewField("latitude", nil, make([]float64, locations.Count)),
-		data.NewField("longitude", nil, make([]float64, locations.Count)),
-		data.NewField("velocity", nil, make([]int32, locations.Count)),
-		data.NewField("altitude", nil, make([]float64, locations.Count)),
+		data.NewField("time", labels, make([]time.Time, locations.Count)),
+		data.NewField("latitude", labels, make([]float64, locations.Count)),
+		data.NewField("longitude", labels, make([]float64, locations.Count)),
+		data.NewField("geohash", labels, make([]string, locations.Count)),
+		data.NewField("velocity", labels, make([]int32, locations.Count)),
+		data.NewField("altitude", labels, make([]float64, locations.Count)),
 	)
 
 	for index, location := range locations.Data {
@@ -81,8 +95,9 @@ func toTimeSeries(locations *types.LocationList) (*data.Frame, error) {
 		frame.Set(0, index, timestamp)
 		frame.Set(1, index, location.Latitude)
 		frame.Set(2, index, location.Longitude)
-		frame.Set(3, index, int32(location.Velocity))
-		frame.Set(4, index, location.Altitude)
+		frame.Set(3, index, location.GeoHash)
+		frame.Set(4, index, int32(location.Velocity))
+		frame.Set(5, index, location.Altitude)
 	}
 
 	return frame, nil
@@ -90,16 +105,27 @@ func toTimeSeries(locations *types.LocationList) (*data.Frame, error) {
 
 func toTable(locations *types.LocationList) (*data.Frame, error) {
 	columns := []string{
-		"time", "longitude", "latitude", "altitude", "velocity",
+		"time",
+		"latitude",
+		"longitude",
+		"altitude",
+		"velocity",
+		"geohash",
+		"accuracy",
+		"radius",
+		"verticalAccuracy",
+		"barometricPressure",
 	}
 
 	frame := data.NewFrameOfFieldTypes("Response",
 		0,
-		data.FieldTypeTime,
-		data.FieldTypeFloat64,
-		data.FieldTypeFloat64,
-		data.FieldTypeFloat64,
-		data.FieldTypeInt32,
+		data.FieldTypeTime,    // time
+		data.FieldTypeFloat64, // latitude
+		data.FieldTypeFloat64, // longitude
+		data.FieldTypeFloat64, // altitude
+		data.FieldTypeInt32,   // velocity
+		data.FieldTypeString,  // geohash
+		data.FieldTypeFloat64, // accuracy
 	)
 
 	err := frame.SetFieldNames(columns...)
@@ -110,7 +136,8 @@ func toTable(locations *types.LocationList) (*data.Frame, error) {
 	for _, location := range locations.Data {
 		timestamp := time.Unix(location.Timestamp, 0)
 
-		frame.AppendRow(timestamp, location.Latitude, location.Longitude, location.Altitude, int32(location.Velocity))
+		frame.AppendRow(timestamp, location.Latitude, location.Longitude, location.Altitude, int32(location.Velocity), location.GeoHash)
+		frame.Row
 	}
 
 	return frame, nil

@@ -60,6 +60,8 @@ github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d h1:kJCB4vdITiW1eC1
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/jannickfahlbusch/owntracks-go v0.0.1 h1:FSqKlcUNOWC1vA6jF2GQrY/Oj+pONHuZeUSOyrrluhI=
 github.com/jannickfahlbusch/owntracks-go v0.0.1/go.mod h1:5Zum0tjUyS+15sblbiGWKfPrPB5nOgYZiMB76a6TxBs=
+github.com/jannickfahlbusch/owntracks-go v0.0.2 h1:Yk55MOi8vvTpdhL44lSFyGW4MAjmsV88OwCR+mFjwDw=
+github.com/jannickfahlbusch/owntracks-go v0.0.2/go.mod h1:5Zum0tjUyS+15sblbiGWKfPrPB5nOgYZiMB76a6TxBs=
 github.com/jhump/protoreflect v1.6.0 h1:h5jfMVslIg6l29nsMs0D8Wj17RDVdNYti0vDN/PZZoE=
 github.com/jhump/protoreflect v1.6.0/go.mod h1:eaTn3RZAmMBcV0fifFvlm6VHNz3wSkYyXYWUh7ymB74=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
