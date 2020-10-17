@@ -1,0 +1,39 @@
+{
+  "type": "datasource",
+  "name": "owntracks",
+  "id": "jannickfahlbusch-owntracks",
+  "metrics": true,
+  "backend": true,
+  "executable": "gpx_owntracks",
+  "info": {
+    "description": "A datasource for owntracks",
+    "author": {
+      "name": "Jannick Fahlbusch",
+      "url": "https://github.com/jannickfahlbusch"
+    },
+    "keywords": [
+      "owntracks"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://github.com/grafana/simple-datasource-backend"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/grafana/simple-datasource-backend/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaVersion": "7.x.x",
+    "plugins": []
+  }
+}
