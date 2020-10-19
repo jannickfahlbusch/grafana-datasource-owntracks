@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"time"
-	"unsafe"
 
 	"github.com/jannickfahlbusch/owntracks-go/types"
 
@@ -75,12 +74,10 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 	timeSeriesFrame, response.Error = toTimeSeries(locations, labels)
 	response.Frames = append(response.Frames, timeSeriesFrame)
 
-	log.DefaultLogger.Info("Returning frames", "length", len(response.Frames), "size", unsafe.Sizeof(response))
-
 	return response
 }
 
-func toTimeSeries(locations *types.LocationList, labels Labels) (*data.Frame, error) {
+func toTimeSeries(locations *types.LocationList, labels data.Labels) (*data.Frame, error) {
 	frame := data.NewFrame("location",
 		data.NewField("time", labels, make([]time.Time, locations.Count)),
 		data.NewField("latitude", labels, make([]float64, locations.Count)),
@@ -88,16 +85,25 @@ func toTimeSeries(locations *types.LocationList, labels Labels) (*data.Frame, er
 		data.NewField("geohash", labels, make([]string, locations.Count)),
 		data.NewField("velocity", labels, make([]int32, locations.Count)),
 		data.NewField("altitude", labels, make([]float64, locations.Count)),
+		data.NewField("accuracy", labels, make([]float64, locations.Count)),
+		data.NewField("verticalAccuracy", labels, make([]float64, locations.Count)),
+		data.NewField("address", labels, make([]string, locations.Count)),
+		data.NewField("locality", labels, make([]string, locations.Count)),
+		data.NewField("countryCode", labels, make([]string, locations.Count)),
 	)
 
 	for index, location := range locations.Data {
-		timestamp := time.Unix(location.Timestamp, 0)
-		frame.Set(0, index, timestamp)
+		frame.Set(0, index, location.Timestamp)
 		frame.Set(1, index, location.Latitude)
 		frame.Set(2, index, location.Longitude)
 		frame.Set(3, index, location.GeoHash)
 		frame.Set(4, index, int32(location.Velocity))
 		frame.Set(5, index, location.Altitude)
+		frame.Set(6, index, location.Accuracy)
+		frame.Set(7, index, location.VerticalAccuracy)
+		frame.Set(8, index, location.Address)
+		frame.Set(9, index, location.Locality)
+		frame.Set(10, index, location.CountryCode)
 	}
 
 	return frame, nil
@@ -134,10 +140,7 @@ func toTable(locations *types.LocationList) (*data.Frame, error) {
 	}
 
 	for _, location := range locations.Data {
-		timestamp := time.Unix(location.Timestamp, 0)
-
-		frame.AppendRow(timestamp, location.Latitude, location.Longitude, location.Altitude, int32(location.Velocity), location.GeoHash)
-		frame.Row
+		frame.AppendRow(location.Timestamp, location.Latitude, location.Longitude, location.Altitude, int32(location.Velocity), location.GeoHash)
 	}
 
 	return frame, nil
