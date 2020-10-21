@@ -6,8 +6,8 @@ export interface OwntracksQuery extends DataQuery {
 }
 
 export const defaultQuery: Partial<OwntracksQuery> = {
-  user: 'tracking',
-  device: 'iphone',
+  user: '',
+  device: '',
 };
 
 /**
