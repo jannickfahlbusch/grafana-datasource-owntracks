@@ -47,11 +47,6 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 	from := query.TimeRange.From
 	to := query.TimeRange.To
 
-	labels := data.Labels{
-		"User":   request.User,
-		"Device": request.Device,
-	}
-
 	var locations *types.LocationList
 	locations, response.Error = client.Locations(ctx, request.User, request.Device, from, to)
 	if response.Error != nil {
@@ -71,25 +66,25 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 
 	// Time Series Frame
 	var timeSeriesFrame *data.Frame
-	timeSeriesFrame, response.Error = toTimeSeries(locations, labels)
+	timeSeriesFrame, response.Error = toTimeSeries(locations)
 	response.Frames = append(response.Frames, timeSeriesFrame)
 
 	return response
 }
 
-func toTimeSeries(locations *types.LocationList, labels data.Labels) (*data.Frame, error) {
+func toTimeSeries(locations *types.LocationList) (*data.Frame, error) {
 	frame := data.NewFrame("location",
-		data.NewField("time", labels, make([]time.Time, locations.Count)),
-		data.NewField("latitude", labels, make([]float64, locations.Count)),
-		data.NewField("longitude", labels, make([]float64, locations.Count)),
-		data.NewField("geohash", labels, make([]string, locations.Count)),
-		data.NewField("velocity", labels, make([]int32, locations.Count)),
-		data.NewField("altitude", labels, make([]float64, locations.Count)),
-		data.NewField("accuracy", labels, make([]float64, locations.Count)),
-		data.NewField("verticalAccuracy", labels, make([]float64, locations.Count)),
-		data.NewField("address", labels, make([]string, locations.Count)),
-		data.NewField("locality", labels, make([]string, locations.Count)),
-		data.NewField("countryCode", labels, make([]string, locations.Count)),
+		data.NewField("time", nil, make([]time.Time, locations.Count)),
+		data.NewField("latitude", nil, make([]float64, locations.Count)),
+		data.NewField("longitude", nil, make([]float64, locations.Count)),
+		data.NewField("geohash", nil, make([]string, locations.Count)),
+		data.NewField("velocity", nil, make([]int32, locations.Count)),
+		data.NewField("altitude", nil, make([]float64, locations.Count)),
+		data.NewField("accuracy", nil, make([]float64, locations.Count)),
+		data.NewField("verticalAccuracy", nil, make([]float64, locations.Count)),
+		data.NewField("address", nil, make([]string, locations.Count)),
+		data.NewField("locality", nil, make([]string, locations.Count)),
+		data.NewField("countryCode", nil, make([]string, locations.Count)),
 	)
 
 	for index, location := range locations.Data {
