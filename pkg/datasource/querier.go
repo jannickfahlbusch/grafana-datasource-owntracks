@@ -16,13 +16,14 @@ import (
 )
 
 func (owntracksDatasource *OwntracksDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	log.DefaultLogger.Info("QueryData", "request", req)
+	log.DefaultLogger.Info("QueryData starting")
 
 	// create response struct
 	response := backend.NewQueryDataResponse()
 
 	otClient, err := owntracksDatasource.Client(req.PluginContext)
 	if err != nil {
+		log.DefaultLogger.Error("Failed to obtain Datasource client", "error", err)
 		return nil, err
 	}
 
@@ -41,6 +42,7 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 
 	response.Error = json.Unmarshal(query.JSON, request)
 	if response.Error != nil {
+		log.DefaultLogger.Error("Failed to unmarshal query into request", "error", response.Error)
 		return response
 	}
 
@@ -50,6 +52,7 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 	var locations *types.LocationList
 	locations, response.Error = client.Locations(ctx, request.User, request.Device, from, to)
 	if response.Error != nil {
+		log.DefaultLogger.Error("Failed to gather location data", "error", response.Error)
 		return response
 	}
 
@@ -74,11 +77,11 @@ func (owntracksDatasource *OwntracksDatasource) query(ctx context.Context, clien
 
 func toTimeSeries(locations *types.LocationList) (*data.Frame, error) {
 	frame := data.NewFrame("location",
-		data.NewField("time", nil, make([]time.Time, locations.Count)),
+		data.NewField("time", nil, make([]*time.Time, locations.Count)),
 		data.NewField("latitude", nil, make([]float64, locations.Count)),
 		data.NewField("longitude", nil, make([]float64, locations.Count)),
+		data.NewField("velocity", nil, make([]float64, locations.Count)),
 		data.NewField("geohash", nil, make([]string, locations.Count)),
-		data.NewField("velocity", nil, make([]int32, locations.Count)),
 		data.NewField("altitude", nil, make([]float64, locations.Count)),
 		data.NewField("accuracy", nil, make([]float64, locations.Count)),
 		data.NewField("verticalAccuracy", nil, make([]float64, locations.Count)),
@@ -91,8 +94,8 @@ func toTimeSeries(locations *types.LocationList) (*data.Frame, error) {
 		frame.Set(0, index, location.Timestamp)
 		frame.Set(1, index, location.Latitude)
 		frame.Set(2, index, location.Longitude)
-		frame.Set(3, index, location.GeoHash)
-		frame.Set(4, index, int32(location.Velocity))
+		frame.Set(3, index, location.Velocity)
+		frame.Set(4, index, location.GeoHash)
 		frame.Set(5, index, location.Altitude)
 		frame.Set(6, index, location.Accuracy)
 		frame.Set(7, index, location.VerticalAccuracy)
@@ -124,7 +127,7 @@ func toTable(locations *types.LocationList) (*data.Frame, error) {
 		data.FieldTypeFloat64, // latitude
 		data.FieldTypeFloat64, // longitude
 		data.FieldTypeFloat64, // altitude
-		data.FieldTypeInt32,   // velocity
+		data.FieldTypeFloat64, // velocity
 		data.FieldTypeString,  // geohash
 		data.FieldTypeFloat64, // accuracy
 	)
@@ -135,7 +138,7 @@ func toTable(locations *types.LocationList) (*data.Frame, error) {
 	}
 
 	for _, location := range locations.Data {
-		frame.AppendRow(location.Timestamp, location.Latitude, location.Longitude, location.Altitude, int32(location.Velocity), location.GeoHash)
+		frame.AppendRow(location.Timestamp, location.Latitude, location.Longitude, location.Altitude, location.Velocity, location.GeoHash)
 	}
 
 	return frame, nil

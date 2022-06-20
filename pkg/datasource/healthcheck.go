@@ -33,7 +33,7 @@ func (owntracksDatasource *OwntracksDatasource) CheckHealth(ctx context.Context,
 	}
 
 	// Create a new client
-	owntracksClient := client.New(settings.Settings().URL + APISuffix)
+	owntracksClient := client.New(settings.Settings().URL)
 	_, err = owntracksClient.Users(ctx)
 	if err != nil {
 		healthCheckResult.Status = backend.HealthStatusError

@@ -8,10 +8,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 )
 
-const (
-	APISuffix = "/api/0/"
-)
-
 func NewDatasource() datasource.ServeOpts {
 	instanceManager := datasource.NewInstanceManager(newDatasourceSettings)
 
@@ -27,7 +23,7 @@ func NewDatasource() datasource.ServeOpts {
 
 func newDatasourceSettings(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	return &datasourceSettings{
-		owntracksClient: client.New(settings.URL + APISuffix),
+		owntracksClient: client.New(settings.URL),
 		settings:        settings,
 	}, nil
 }
